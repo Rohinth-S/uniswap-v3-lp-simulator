@@ -67,3 +67,11 @@ For the RPC command, set `RPC_URL` to an endpoint that serves the requested rang
 The synthetic tape contains 100 swaps. With the default strategy settings, the static range ends at 10,641.04 token1. The dynamic range rebalances nine times and ends at 9,164.64 token1. Both start at 10,000 token1.
 
 ![Synthetic LP pool marks, rebalance events and net values](docs/demo-results.png)
+
+## Commit dates
+
+Both Git date fields on the 40 commits in the November 2026 portfolio update
+use retrospectively assigned milestones from 2026-05-01 through 2026-06-30,
+the project period listed in the résumé. Each commit records its assigned date
+in the Project-Milestone trailer and its original committer timestamp in
+the Original-Commit-Date trailer. Use git log --format=fuller to inspect the dates.
