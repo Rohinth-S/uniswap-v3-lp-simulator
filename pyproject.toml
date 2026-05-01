@@ -1,0 +1,16 @@
+[project]
+name = "uniswap-v3-lp-simulator"
+version = "0.1.0"
+description = "Reproducible quantitative research system"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.1",
+]
+
+[project.scripts]
+uniswap_v3_lp_simulator = "lp_simulator.cli:main"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
