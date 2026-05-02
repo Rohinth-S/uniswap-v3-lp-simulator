@@ -6,6 +6,8 @@ import hashlib
 import json
 from pathlib import Path
 
+from . import __version__
+
 from .events import decode_logs, fetch_logs
 from .fixtures import demo_tape
 from .replay import holdout_width_study, replay_lp
@@ -35,6 +37,7 @@ def main() -> None:
     parser.add_argument("--output", type=Path)
     parser.add_argument("--ledger", type=Path, help="optional per-strategy swap CSV")
     parser.add_argument("--write-tape", type=Path, help="export the normalized replay input")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     args = parser.parse_args()
 
     try:
