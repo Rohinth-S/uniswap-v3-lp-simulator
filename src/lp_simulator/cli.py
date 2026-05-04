@@ -6,6 +6,8 @@ import hashlib
 import json
 from pathlib import Path
 
+from .artifacts import write_text_atomic
+
 from . import __version__
 
 from .events import decode_logs, fetch_logs
@@ -17,8 +19,7 @@ from .tape import PoolMetadata, ReplayConfig, Tape
 
 def _write(path: Path | None, payload: str) -> None:
     if path:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(payload, encoding="utf-8")
+        write_text_atomic(path, payload)
 
 
 def main() -> None:
