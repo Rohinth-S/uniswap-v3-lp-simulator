@@ -9,6 +9,7 @@ from pathlib import Path
 from .artifacts import write_text_atomic
 
 from . import __version__
+from .artifacts import require_distinct_paths
 
 from .events import decode_logs, fetch_logs
 from .fixtures import demo_tape
@@ -42,6 +43,15 @@ def main() -> None:
     args = parser.parse_args()
 
     try:
+        require_distinct_paths(
+            tape=args.input,
+            raw_logs=args.raw_logs,
+            metadata=args.metadata,
+            configuration=args.config,
+            report=args.output,
+            ledger=args.ledger,
+            normalized_output=args.write_tape,
+        )
         if args.input:
             raw = args.input.read_bytes()
             tape = Tape.model_validate_json(raw)
