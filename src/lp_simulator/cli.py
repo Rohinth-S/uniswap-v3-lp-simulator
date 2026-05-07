@@ -92,6 +92,7 @@ def main() -> None:
                 writer.writeheader()
                 writer.writerows(ledger)
         _write(args.write_tape, tape.model_dump_json(indent=2) + "\n")
+        report["producer"] = {"name": "uniswap-v3-lp-simulator", "version": __version__, "format_version": 1}
         payload = json.dumps(report, indent=2, allow_nan=False) + "\n"
         _write(args.output, payload)
     except (OSError, ValueError, RuntimeError) as exc:
