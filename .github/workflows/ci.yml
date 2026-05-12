@@ -20,6 +20,16 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
-      - run: python -m pip install '.[test]'
+      - run: python -m pip wheel --no-deps --wheel-dir dist .
+      - name: Install wheel and test dependencies
+        shell: bash
+        run: |
+          wheels=(dist/*.whl)
+          python -m pip install "${wheels[0]}[test]"
       - run: python -m pytest -q
       - run: uniswap_v3_lp_simulator --output reports/ci.json --ledger reports/ci-ledger.csv --width-candidates 400 600 900
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demo-${{ matrix.os }}-${{ matrix.python }}
+          path: reports/ci.json
+          if-no-files-found: error
