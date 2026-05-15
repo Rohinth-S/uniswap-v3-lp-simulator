@@ -14,7 +14,7 @@ Hash = Annotated[str, StringConstraints(to_lower=True, pattern=r"^0x[0-9a-fA-F]{
 Tick = Annotated[int, Field(ge=MIN_TICK, le=MAX_TICK)]
 SqrtPrice = Annotated[int, Field(ge=MIN_SQRT_X96, lt=MAX_SQRT_X96)]
 Liquidity = Annotated[int, Field(ge=0, lt=2**128)]
-Ordinal = Annotated[int, Field(ge=0)]
+Ordinal = Annotated[int, Field(ge=0, le=2**64 - 1)]
 
 
 class Contract(BaseModel):
