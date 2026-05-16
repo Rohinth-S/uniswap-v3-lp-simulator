@@ -18,6 +18,12 @@ TOPICS = {"0x" + Web3.keccak(text=signature).hex(): kind for kind, signature in 
 CODEC = Web3().codec
 
 
+def _quantity(raw: str) -> int:
+    if not isinstance(raw, str) or not re.fullmatch(r"0x(?:0|[1-9a-fA-F][0-9a-fA-F]{0,15})", raw):
+        raise ValueError("pool event quantity must be canonical uint64 hexadecimal")
+    return int(raw, 16)
+
+
 def _decode(types: list[str], data: str) -> tuple:
     if not re.fullmatch(r"0x[0-9a-fA-F]*", str(data)) or len(data) != 2 + 64 * len(types):
         raise ValueError("incomplete ABI word sequence")
@@ -39,7 +45,7 @@ def decode_logs(meta: PoolMetadata, logs: list[dict]) -> Tape:
             if log.get("removed") or not log.get("blockHash") or not log.get("transactionHash"):
                 raise ValueError("pool log must be mined and canonical in its capture")
             key = {
-                "block": int(log["blockNumber"], 16), "log_index": int(log["logIndex"], 16),
+                "block": _quantity(log["blockNumber"]), "log_index": _quantity(log["logIndex"]),
                 "block_hash": log["blockHash"], "tx_hash": log["transactionHash"],
             }
             if kind == "initialize" and len(topics) == 1:
