@@ -42,6 +42,8 @@ def decode_logs(meta: PoolMetadata, logs: list[dict]) -> Tape:
             kind = TOPICS.get(topics[0]) if topics else None
             if address != meta.pool or kind is None:
                 continue
+            if any(not re.fullmatch(r"0x[0-9a-f]{64}", topic) for topic in topics):
+                raise ValueError("pool log topics must be complete ABI words")
             if log.get("removed") or not log.get("blockHash") or not log.get("transactionHash"):
                 raise ValueError("pool log must be mined and canonical in its capture")
             key = {
