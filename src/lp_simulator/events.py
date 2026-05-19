@@ -83,17 +83,19 @@ def fetch_logs(
 ) -> list[dict]:
     if not 0 <= from_block <= to_block or not 1 <= chunk_blocks <= 2_000 or to_block - from_block >= 50_000:
         raise ValueError("provide an ordered range of at most 50,000 blocks and chunk size in [1, 2000]")
-    if int(rpc.call("eth_chainId", []), 16) != meta.chain_id:
+    if _quantity(rpc.call("eth_chainId", [])) != meta.chain_id:
         raise ValueError("RPC chain ID does not match pool metadata")
     finalized = rpc.call("eth_getBlockByNumber", ["finalized", False])
-    if not isinstance(finalized, dict) or not finalized.get("number") or int(finalized["number"], 16) < to_block:
+    if not isinstance(finalized, dict) or not finalized.get("number") or _quantity(finalized["number"]) < to_block:
         raise ValueError("end block must be finalized on the selected provider")
     logs = []
     for start in range(from_block, to_block + 1, chunk_blocks):
         end = min(start + chunk_blocks - 1, to_block)
         result = rpc.get_logs(from_block=start, to_block=end, address=meta.pool, topics=[list(TOPICS)])
         if not isinstance(result, list) or any(
-            not start <= int(log.get("blockNumber", "-0x1"), 16) <= end for log in result
+            not isinstance(log, dict) or log.get("blockNumber") is None
+            or not start <= _quantity(log["blockNumber"]) <= end
+            for log in result
         ):
             raise ValueError("provider returned logs outside the requested block interval")
         logs.extend(result)
