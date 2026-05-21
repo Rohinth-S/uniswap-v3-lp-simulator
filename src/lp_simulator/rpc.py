@@ -22,10 +22,11 @@ class JsonRpcClient:
 
     def __post_init__(self) -> None:
         selected_network = os.getenv("RPC_NETWORK", self.network)
-        if selected_network not in RPC_NETWORKS and not self.url:
+        explicit = self.url or os.getenv("RPC_URL")
+        if selected_network not in RPC_NETWORKS and not explicit:
             raise ValueError(f"unknown network {selected_network!r}; provide an explicit url")
         self.network = selected_network
-        self.url = self.url or os.getenv("RPC_URL") or RPC_NETWORKS[self.network]
+        self.url = explicit or RPC_NETWORKS[self.network]
 
     def request_payload(self, method: str, params: list) -> bytes:
         return json.dumps({"jsonrpc": "2.0", "id": 1, "method": method, "params": params}).encode()
@@ -41,8 +42,14 @@ class JsonRpcClient:
         )
         with urlopen(req, timeout=self.timeout) as response:
             payload = json.loads(response.read())
+        if not isinstance(payload, dict) or payload.get("jsonrpc") != "2.0" or payload.get("id") != 1:
+            raise RuntimeError(f"JSON-RPC {method} returned an invalid response envelope")
         if "error" in payload:
-            raise RuntimeError(f"JSON-RPC {method} failed: {payload['error']}")
+            error = payload["error"]
+            code = error.get("code") if isinstance(error, dict) else None
+            raise RuntimeError(f"JSON-RPC {method} failed with error code {code}")
+        if "result" not in payload:
+            raise RuntimeError(f"JSON-RPC {method} returned no result")
         return payload["result"]
 
     def block_number(self) -> int:
