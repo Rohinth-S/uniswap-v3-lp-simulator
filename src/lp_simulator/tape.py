@@ -102,10 +102,14 @@ class Tape(PoolMetadata):
             raise ValueError("replay requires a first Initialize event or a complete opening snapshot")
         if self.opening is not None and (initializations or self.opening.block >= self.events[0].block):
             raise ValueError("opening snapshot must predate the first event and cannot be combined with Initialize")
-        hashes = {}
+        hashes, block_by_hash, block_by_tx = {}, {}, {}
         for event in self.events:
             if event.block_hash and hashes.setdefault(event.block, event.block_hash) != event.block_hash:
                 raise ValueError("events mix block hashes at the same height")
+            if event.block_hash and block_by_hash.setdefault(event.block_hash, event.block) != event.block:
+                raise ValueError("one block hash cannot identify multiple heights")
+            if event.tx_hash and block_by_tx.setdefault(event.tx_hash, event.block) != event.block:
+                raise ValueError("one transaction hash cannot occur at multiple heights")
         return self
 
 
