@@ -21,10 +21,12 @@ class PoolState:
         self._prefix: list[int] = []
         self._dirty = False
         if pool.opening:
+            seen = set()
             for position in pool.opening.positions:
                 key = (position.owner, position.lower_tick, position.upper_tick)
-                if key in self.positions:
+                if key in seen:
                     raise ValueError("duplicate range in opening snapshot")
+                seen.add(key)
                 self._change(position, position.liquidity)
             self._set_price(pool.opening.tick, pool.opening.sqrt_price_x96)
             self._validate_active(pool.opening.active_liquidity)
