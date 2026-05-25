@@ -41,6 +41,8 @@ class PoolState:
         next_liquidity = self.positions.get(key, 0) + delta
         if next_liquidity < 0:
             raise ValueError("liquidity burn exceeds reconstructed owner-range balance")
+        if next_liquidity >= 2**128:
+            raise ValueError("owner-range liquidity exceeds uint128")
         if next_liquidity:
             self.positions[key] = next_liquidity
         else:
