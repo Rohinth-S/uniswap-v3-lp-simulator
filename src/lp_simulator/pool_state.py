@@ -70,8 +70,8 @@ class PoolState:
         self._refresh()
         return self._ticks[bisect_right(self._ticks, lower):bisect_right(self._ticks, upper)]
 
-    def _validate_active(self, reported: int) -> None:
-        active = self.active_at(self.tick)
+    def _validate_active(self, reported: int, tick: int | None = None) -> None:
+        active = self.active_at(self.tick if tick is None else tick)
         if active != reported:
             raise ValueError(f"reconstructed active liquidity {active} differs from emitted {reported}")
 
@@ -92,7 +92,7 @@ class PoolState:
                 change = event.sqrt_price_x96 - self.sqrt_price_x96
                 if (change > 0 and event.amount0 > 0) or (change < 0 and event.amount1 > 0):
                     raise ValueError("swap direction disagrees with the price movement")
+                self._validate_active(event.active_liquidity, event.tick)
                 self._set_price(event.tick, event.sqrt_price_x96)
-                self._validate_active(event.active_liquidity)
             except ValueError as exc:
                 raise ValueError(f"block {event.block}, log {event.log_index}: {exc}") from exc
