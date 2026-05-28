@@ -15,6 +15,7 @@ class PoolState:
         self.spacing = pool.tick_spacing
         self.positions: dict[tuple[str, int, int], int] = {}
         self.liquidity_net: dict[int, int] = {}
+        self.liquidity_gross: dict[int, int] = {}
         self.tick: int | None = None
         self.sqrt_price_x96: int | None = None
         self._ticks: list[int] = []
@@ -43,6 +44,14 @@ class PoolState:
             raise ValueError("liquidity burn exceeds reconstructed owner-range balance")
         if next_liquidity >= 2**128:
             raise ValueError("owner-range liquidity exceeds uint128")
+        gross = {tick: self.liquidity_gross.get(tick, 0) + delta for tick in (lower, upper)}
+        if any(not 0 <= value < 2**128 for value in gross.values()):
+            raise ValueError("boundary gross liquidity must fit in uint128")
+        for tick, value in gross.items():
+            if value:
+                self.liquidity_gross[tick] = value
+            else:
+                self.liquidity_gross.pop(tick, None)
         if next_liquidity:
             self.positions[key] = next_liquidity
         else:

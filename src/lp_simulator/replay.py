@@ -79,6 +79,7 @@ def replay_lp(
         "end_block": rows[-1]["block"], "end_tick": market.tick,
         "reconstructed_positions": len(market.positions),
         "nonzero_net_ticks": len(market.liquidity_net),
+        "initialized_ticks": len(market.liquidity_gross),
         "strategies": summaries,
     }, rows
 
