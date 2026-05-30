@@ -77,9 +77,10 @@ class RangePosition:
 
 def _fee_share(position: RangePosition, state: PoolState, start: float, end: float, token0_in: bool, raw_liquidity: float) -> float:
     if start == end:
-        if not position.contains(state.tick):
-            return 0
-        return raw_liquidity / (state.active_at(state.tick) + raw_liquidity)
+        observed_liquidity = state.active_at(state.tick)
+        if not observed_liquidity or not position.contains(state.tick):
+            return 0.0
+        return raw_liquidity / (observed_liquidity + raw_liquidity)
     lower, upper = sorted((start, end))
     low_tick = floor(2 * log(lower) / LOG_TICK)
     high_tick = floor(2 * log(upper) / LOG_TICK) + 1
