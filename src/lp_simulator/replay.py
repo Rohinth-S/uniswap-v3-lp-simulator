@@ -34,6 +34,7 @@ def replay_lp(
                 positions[name] = position
                 hold_tokens[name] = position.amounts(opening_sqrt)
         swap_fee = {name: swap_fees(position, market, event, tape, config) for name, position in positions.items()}
+        tick_before, sqrt_x96_before = market.tick, market.sqrt_price_x96
         market.apply(event)
         sqrt_price = market.sqrt_price_x96 / Q96 * scale
         price = sqrt_price**2
@@ -49,6 +50,8 @@ def replay_lp(
             rows.append({
                 "strategy": name, "swap_index": swap_index, "block": event.block, "log_index": event.log_index,
                 "tick": market.tick, "price_token1": price, "active_liquidity_raw": event.active_liquidity,
+                "tick_before": tick_before, "sqrt_price_x96_before": str(sqrt_x96_before),
+                "sqrt_price_x96_after": str(event.sqrt_price_x96),
                 "lower_tick": position.lower_tick, "upper_tick": position.upper_tick,
                 "inside_range_at_swap_end": was_active, "rebalanced": rebalanced, "fee_quote": swap_fee[name],
                 "cumulative_fees_quote": position.fees_quote, "cumulative_gas_quote": position.gas_quote,
