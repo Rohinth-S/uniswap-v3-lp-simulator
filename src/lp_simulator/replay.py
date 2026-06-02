@@ -1,7 +1,7 @@
 """Replay observed pool events with static and actively rebalanced LPs."""
 
 from .pool_state import Q96, PoolState
-from .positions import RangePosition, swap_fees
+from .positions import RangePosition, swap_fees, swap_notional_quote
 from .tape import ReplayConfig, Swap, Tape
 
 
@@ -38,6 +38,7 @@ def replay_lp(
         market.apply(event)
         sqrt_price = market.sqrt_price_x96 / Q96 * scale
         price = sqrt_price**2
+        notional = swap_notional_quote(event, tape, price)
         for name, position in positions.items():
             was_active = position.contains(market.tick)
             position.fees_quote += swap_fee[name]
@@ -52,6 +53,7 @@ def replay_lp(
                 "tick": market.tick, "price_token1": price, "active_liquidity_raw": event.active_liquidity,
                 "tick_before": tick_before, "sqrt_price_x96_before": str(sqrt_x96_before),
                 "sqrt_price_x96_after": str(event.sqrt_price_x96),
+                "swap_notional_quote": notional,
                 "lower_tick": position.lower_tick, "upper_tick": position.upper_tick,
                 "inside_range_at_swap_end": was_active, "rebalanced": rebalanced, "fee_quote": swap_fee[name],
                 "cumulative_fees_quote": position.fees_quote, "cumulative_gas_quote": position.gas_quote,

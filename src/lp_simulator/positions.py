@@ -99,6 +99,12 @@ def _fee_share(position: RangePosition, state: PoolState, start: float, end: flo
     return lp_weight / volume if volume else 0.0
 
 
+def swap_notional_quote(event: Swap, pool: PoolMetadata, price: float) -> float:
+    if event.amount0 > 0:
+        return event.amount0 / 10**pool.token0_decimals * price
+    return event.amount1 / 10**pool.token1_decimals
+
+
 def swap_fees(
     position: RangePosition, state: PoolState, event: Swap, pool: PoolMetadata, config: ReplayConfig,
 ) -> float:
@@ -106,9 +112,7 @@ def swap_fees(
     end = event.sqrt_price_x96 / Q96
     token0_in = event.amount0 > 0
     price = (end * position.sqrt_scale) ** 2
-    notional = (
-        event.amount0 / 10**pool.token0_decimals * price if token0_in else event.amount1 / 10**pool.token1_decimals
-    )
+    notional = swap_notional_quote(event, pool, price)
     raw_liquidity = position.liquidity * 10 ** ((pool.token0_decimals + pool.token1_decimals) / 2)
     share = _fee_share(position, state, start, end, token0_in, raw_liquidity)
     return notional * pool.fee_pips / 10**6 * (1 - config.protocol_fee_share) * share
