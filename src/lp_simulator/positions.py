@@ -28,6 +28,7 @@ class RangePosition:
     gas_quote: float = 0
     slippage_quote: float = 0
     rebalances: int = 0
+    last_rebalance_reason: str | None = None
 
     def contains(self, tick: int) -> bool:
         return self.lower_tick <= tick < self.upper_tick
@@ -55,23 +56,27 @@ class RangePosition:
 
     def maybe_rebalance(self, tick: int, sqrt_price: float, pool: PoolMetadata, config: ReplayConfig) -> bool:
         if self.contains(tick):
+            self.last_rebalance_reason = "in_range"
             return False
         x, y = self.amounts(sqrt_price)
         price = sqrt_price**2
         gross_value = x * price + y
         new = self.open(tick, sqrt_price, gross_value, pool, config)
         if (new.lower_tick, new.upper_tick) == (self.lower_tick, self.upper_tick):
+            self.last_rebalance_reason = "same_usable_range"
             return False
         new_x, _ = new.amounts(sqrt_price)
         slippage = abs(new_x - x) * price * config.turnover_slippage_bps / 10_000
         cost = config.gas_quote + slippage
         if gross_value <= cost:
+            self.last_rebalance_reason = "insufficient_inventory"
             return False
         self.lower_tick, self.upper_tick = new.lower_tick, new.upper_tick
         self.liquidity = new.liquidity * (gross_value - cost) / gross_value
         self.gas_quote += config.gas_quote
         self.slippage_quote += slippage
         self.rebalances += 1
+        self.last_rebalance_reason = "range_shift"
         return True
 
 

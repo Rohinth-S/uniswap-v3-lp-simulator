@@ -56,6 +56,7 @@ def replay_lp(
                 "swap_notional_quote": notional,
                 "lower_tick": position.lower_tick, "upper_tick": position.upper_tick,
                 "inside_range_at_swap_end": was_active, "rebalanced": rebalanced, "fee_quote": swap_fee[name],
+                "rebalance_reason": position.last_rebalance_reason if name == "rebalanced" else "static_policy",
                 "cumulative_fees_quote": position.fees_quote, "cumulative_gas_quote": position.gas_quote,
                 "cumulative_turnover_cost_quote": position.slippage_quote,
                 "token0_units": x, "token1_units": y, "position_value_quote": value,
