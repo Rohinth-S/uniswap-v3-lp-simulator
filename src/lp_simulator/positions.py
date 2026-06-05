@@ -27,6 +27,7 @@ class RangePosition:
     fees_quote: float = 0
     gas_quote: float = 0
     slippage_quote: float = 0
+    turnover_quote: float = 0
     rebalances: int = 0
     last_rebalance_reason: str | None = None
 
@@ -66,7 +67,8 @@ class RangePosition:
             self.last_rebalance_reason = "same_usable_range"
             return False
         new_x, _ = new.amounts(sqrt_price)
-        slippage = abs(new_x - x) * price * config.turnover_slippage_bps / 10_000
+        turnover = abs(new_x - x) * price
+        slippage = turnover * config.turnover_slippage_bps / 10_000
         cost = config.gas_quote + slippage
         if gross_value <= cost:
             self.last_rebalance_reason = "insufficient_inventory"
@@ -75,6 +77,7 @@ class RangePosition:
         self.liquidity = new.liquidity * (gross_value - cost) / gross_value
         self.gas_quote += config.gas_quote
         self.slippage_quote += slippage
+        self.turnover_quote += turnover
         self.rebalances += 1
         self.last_rebalance_reason = "range_shift"
         return True

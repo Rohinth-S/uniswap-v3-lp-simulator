@@ -59,6 +59,7 @@ def replay_lp(
                 "rebalance_reason": position.last_rebalance_reason if name == "rebalanced" else "static_policy",
                 "cumulative_fees_quote": position.fees_quote, "cumulative_gas_quote": position.gas_quote,
                 "cumulative_turnover_cost_quote": position.slippage_quote,
+                "cumulative_turnover_quote": position.turnover_quote,
                 "token0_units": x, "token1_units": y, "position_value_quote": value,
                 "hold_value_quote": hold, "net_value_quote": total, "value_minus_hold_quote": total - hold,
                 "inventory_vs_hold_pct": 100 * (value / hold - 1),
@@ -76,6 +77,7 @@ def replay_lp(
             "inventory_vs_hold_pct": last["inventory_vs_hold_pct"],
             "fee_income_quote": last["cumulative_fees_quote"], "gas_quote": last["cumulative_gas_quote"],
             "turnover_cost_quote": last["cumulative_turnover_cost_quote"],
+            "turnover_quote": last["cumulative_turnover_quote"],
             "rebalances": positions[name].rebalances,
             "in_range_swap_end_fraction": sum(row["inside_range_at_swap_end"] for row in selected) / len(selected),
         }
