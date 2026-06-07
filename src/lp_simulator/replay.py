@@ -70,7 +70,14 @@ def replay_lp(
     for name in positions:
         selected = [row for row in rows if row["strategy"] == name]
         last = selected[-1]
+        peak, drawdown, drawdown_pct = config.capital_quote, 0.0, 0.0
+        for row in selected:
+            mark = row["net_value_quote"]
+            peak = max(peak, mark)
+            drawdown = max(drawdown, peak - mark)
+            drawdown_pct = max(drawdown_pct, (peak - mark) / peak * 100)
         summaries[name] = {
+            "max_drawdown_quote": drawdown, "max_drawdown_pct": drawdown_pct,
             "net_value_quote": last["net_value_quote"],
             "net_pnl_quote": last["net_value_quote"] - config.capital_quote,
             "hold_value_quote": last["hold_value_quote"], "value_minus_hold_quote": last["value_minus_hold_quote"],
