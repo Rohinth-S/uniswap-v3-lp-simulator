@@ -17,11 +17,11 @@ def replay_lp(
     observed = 0
     scale = 10 ** ((tape.token0_decimals - tape.token1_decimals) / 2)
     for event in tape.events:
+        if until_swap is not None and observed >= until_swap:
+            break
         if not isinstance(event, Swap):
             market.apply(event)
             continue
-        if until_swap is not None and observed >= until_swap:
-            break
         swap_index = observed
         observed += 1
         if swap_index < from_swap:
