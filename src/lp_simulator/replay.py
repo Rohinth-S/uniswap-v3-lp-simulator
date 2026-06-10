@@ -104,6 +104,8 @@ def holdout_width_study(
 ) -> tuple[dict, list[dict]]:
     if not 0 < fraction < 1 or not widths:
         raise ValueError("holdout fraction must be between 0 and 1 and widths must be supplied")
+    if len(widths) > 16 or any(not 1 <= width <= 300_000 for width in widths):
+        raise ValueError("provide at most 16 widths between 1 and 300000 ticks")
     swaps = sum(isinstance(event, Swap) for event in tape.events)
     cutoff = int(swaps * (1 - fraction))
     if cutoff < 2 or swaps - cutoff < 2:
