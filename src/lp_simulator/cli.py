@@ -35,6 +35,8 @@ def main() -> None:
     parser.add_argument("--config", type=Path, help="capital, width, fee share and rebalance costs as JSON")
     parser.add_argument("--width-candidates", type=int, nargs="+", help="select a width on a training prefix")
     parser.add_argument("--holdout-fraction", type=float, default=0.25)
+    parser.add_argument("--from-swap", type=int, default=0)
+    parser.add_argument("--until-swap", type=int)
     parser.add_argument("--seed", type=int, default=11)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--ledger", type=Path, help="optional per-strategy swap CSV")
@@ -79,11 +81,13 @@ def main() -> None:
             source = {"kind": "synthetic", "seed": args.seed}
         cfg = ReplayConfig.model_validate_json(args.config.read_bytes()) if args.config else ReplayConfig()
         if args.width_candidates:
+            if args.from_swap or args.until_swap is not None:
+                raise ValueError("explicit swap windows cannot be combined with width selection")
             report, ledger = holdout_width_study(
                 tape, cfg, widths=args.width_candidates, fraction=args.holdout_fraction,
             )
         else:
-            report, ledger = replay_lp(tape, cfg)
+            report, ledger = replay_lp(tape, cfg, from_swap=args.from_swap, until_swap=args.until_swap)
         report["source"] = {**source, "events": len(tape.events)}
         if args.ledger:
             args.ledger.parent.mkdir(parents=True, exist_ok=True)
