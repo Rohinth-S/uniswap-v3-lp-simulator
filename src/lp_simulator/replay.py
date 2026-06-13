@@ -7,6 +7,7 @@ from .tape import ReplayConfig, Swap, Tape
 
 def replay_lp(
     tape: Tape, config: ReplayConfig = ReplayConfig(), *, from_swap: int = 0, until_swap: int | None = None,
+    include_pool_state: bool = False,
 ) -> tuple[dict, list[dict]]:
     if from_swap < 0 or (until_swap is not None and until_swap <= from_swap):
         raise ValueError("invalid swap evaluation range")
@@ -88,7 +89,7 @@ def replay_lp(
             "rebalances": positions[name].rebalances,
             "in_range_swap_end_fraction": sum(row["inside_range_at_swap_end"] for row in selected) / len(selected),
         }
-    return {
+    report = {
         "chain_id": tape.chain_id, "pool": tape.pool, "quote_unit": "token1",
         "config": config.model_dump(), "first_evaluated_swap": from_swap, "swaps": len(rows) // 2,
         "end_block": rows[-1]["block"], "end_tick": market.tick,
@@ -96,11 +97,26 @@ def replay_lp(
         "nonzero_net_ticks": len(market.liquidity_net),
         "initialized_ticks": len(market.liquidity_gross),
         "strategies": summaries,
-    }, rows
+    }
+    if include_pool_state:
+        report["pool_state"] = {
+            "active_liquidity_raw": str(market.active_at(market.tick)),
+            "sqrt_price_x96": str(market.sqrt_price_x96),
+            "positions": [
+                {"owner": owner, "lower_tick": lower, "upper_tick": upper, "liquidity_raw": str(raw)}
+                for (owner, lower, upper), raw in sorted(market.positions.items())
+            ],
+            "ticks": [
+                {"tick": tick, "gross_liquidity_raw": str(gross), "net_liquidity_raw": str(market.liquidity_net.get(tick, 0))}
+                for tick, gross in sorted(market.liquidity_gross.items())
+            ],
+        }
+    return report, rows
 
 
 def holdout_width_study(
     tape: Tape, config: ReplayConfig, *, widths: list[int], fraction: float = 0.25,
+    include_pool_state: bool = False,
 ) -> tuple[dict, list[dict]]:
     if not 0 < fraction < 1 or not widths:
         raise ValueError("holdout fraction must be between 0 and 1 and widths must be supplied")
@@ -109,7 +125,7 @@ def holdout_width_study(
     swaps = sum(isinstance(event, Swap) for event in tape.events)
     cutoff = int(swaps * (1 - fraction))
     if cutoff < 2 or swaps - cutoff < 2:
-        result, ledger = replay_lp(tape, config)
+        result, ledger = replay_lp(tape, config, include_pool_state=include_pool_state)
         return {**result, "selection": {"status": "insufficient_swaps"}}, ledger
 
     train = []
@@ -121,7 +137,7 @@ def holdout_width_study(
         train.append({"half_width_ticks": width, "training_value_minus_hold_quote": score})
     best = max(train, key=lambda row: row["training_value_minus_hold_quote"])["half_width_ticks"]
     chosen = ReplayConfig.model_validate({**config.model_dump(), "half_width_ticks": best})
-    result, ledger = replay_lp(tape, chosen, from_swap=cutoff)
+    result, ledger = replay_lp(tape, chosen, from_swap=cutoff, include_pool_state=include_pool_state)
     return {
         **result, "selection": {
             "status": "holdout", "training_swaps": cutoff, "holdout_swaps": swaps - cutoff,
