@@ -61,7 +61,8 @@ def main() -> None:
         elif args.raw_logs or args.rpc_range:
             if args.metadata is None:
                 parser.error("raw logs and RPC ranges require --metadata")
-            meta = PoolMetadata.model_validate_json(args.metadata.read_bytes())
+            meta_raw = args.metadata.read_bytes()
+            meta = PoolMetadata.model_validate_json(meta_raw)
             if args.rpc_range:
                 first, last = args.rpc_range
                 logs = fetch_logs(
@@ -76,10 +77,14 @@ def main() -> None:
                     raise ValueError("raw logs must be a JSON array")
                 source = {"kind": "captured_rpc_logs", "sha256": hashlib.sha256(raw).hexdigest()}
             tape = decode_logs(meta, logs)
+            source["metadata_sha256"] = hashlib.sha256(meta_raw).hexdigest()
         else:
             tape = demo_tape(args.seed)
             source = {"kind": "synthetic", "seed": args.seed}
-        cfg = ReplayConfig.model_validate_json(args.config.read_bytes()) if args.config else ReplayConfig()
+        config_raw = args.config.read_bytes() if args.config else None
+        cfg = ReplayConfig.model_validate_json(config_raw) if config_raw is not None else ReplayConfig()
+        if config_raw is not None:
+            source["configuration_sha256"] = hashlib.sha256(config_raw).hexdigest()
         if args.width_candidates:
             if args.from_swap or args.until_swap is not None:
                 raise ValueError("explicit swap windows cannot be combined with width selection")
