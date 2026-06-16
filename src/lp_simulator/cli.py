@@ -3,6 +3,7 @@
 import argparse
 import csv
 import hashlib
+from io import StringIO
 import json
 from pathlib import Path
 
@@ -95,11 +96,11 @@ def main() -> None:
             report, ledger = replay_lp(tape, cfg, from_swap=args.from_swap, until_swap=args.until_swap)
         report["source"] = {**source, "events": len(tape.events)}
         if args.ledger:
-            args.ledger.parent.mkdir(parents=True, exist_ok=True)
-            with args.ledger.open("w", encoding="utf-8", newline="") as handle:
-                writer = csv.DictWriter(handle, fieldnames=list(ledger[0]))
-                writer.writeheader()
-                writer.writerows(ledger)
+            handle = StringIO(newline="")
+            writer = csv.DictWriter(handle, fieldnames=list(ledger[0]), lineterminator="\n")
+            writer.writeheader()
+            writer.writerows(ledger)
+            write_text_atomic(args.ledger, handle.getvalue())
         _write(args.write_tape, tape.model_dump_json(indent=2) + "\n")
         report["producer"] = {"name": "uniswap-v3-lp-simulator", "version": __version__, "format_version": 1}
         payload = json.dumps(report, indent=2, allow_nan=False) + "\n"
