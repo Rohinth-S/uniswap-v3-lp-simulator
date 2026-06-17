@@ -93,6 +93,8 @@ def replay_lp(
         "chain_id": tape.chain_id, "pool": tape.pool, "quote_unit": "token1",
         "config": config.model_dump(), "first_evaluated_swap": from_swap, "swaps": len(rows) // 2,
         "end_block": rows[-1]["block"], "end_tick": market.tick,
+        "first_evaluated_block": rows[0]["block"], "last_evaluated_swap": rows[-1]["swap_index"],
+        "first_evaluated_log": rows[0]["log_index"], "last_evaluated_log": rows[-1]["log_index"],
         "reconstructed_positions": len(market.positions),
         "nonzero_net_ticks": len(market.liquidity_net),
         "initialized_ticks": len(market.liquidity_gross),
