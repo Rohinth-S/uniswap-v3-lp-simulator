@@ -42,6 +42,7 @@ def main() -> None:
     parser.add_argument("--output", type=Path)
     parser.add_argument("--ledger", type=Path, help="optional per-strategy swap CSV")
     parser.add_argument("--write-tape", type=Path, help="export the normalized replay input")
+    parser.add_argument("--pool-state-json", type=Path, help="export terminal owner ranges and tick liquidity")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     args = parser.parse_args()
 
@@ -54,6 +55,7 @@ def main() -> None:
             report=args.output,
             ledger=args.ledger,
             normalized_output=args.write_tape,
+            pool_state=args.pool_state_json,
         )
         if args.input:
             raw = args.input.read_bytes()
@@ -91,9 +93,17 @@ def main() -> None:
                 raise ValueError("explicit swap windows cannot be combined with width selection")
             report, ledger = holdout_width_study(
                 tape, cfg, widths=args.width_candidates, fraction=args.holdout_fraction,
+                include_pool_state=bool(args.pool_state_json),
             )
         else:
-            report, ledger = replay_lp(tape, cfg, from_swap=args.from_swap, until_swap=args.until_swap)
+            report, ledger = replay_lp(
+                tape, cfg, from_swap=args.from_swap, until_swap=args.until_swap,
+                include_pool_state=bool(args.pool_state_json),
+            )
+        if args.pool_state_json:
+            snapshot = report.pop("pool_state")
+            snapshot.update(chain_id=tape.chain_id, pool=tape.pool, end_block=report["end_block"])
+            _write(args.pool_state_json, json.dumps(snapshot, indent=2, allow_nan=False) + "\n")
         report["source"] = {**source, "events": len(tape.events)}
         if args.ledger:
             handle = StringIO(newline="")
