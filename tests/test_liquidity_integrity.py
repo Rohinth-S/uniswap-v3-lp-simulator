@@ -26,3 +26,18 @@ def test_bad_swaps_do_not_move_state_and_zero_net_ticks_stay_initialized():
             kind="mint", block=11000, log_index=1, owner=owner, lower_tick=lower, upper_tick=upper, liquidity=10,
         ))
     assert state.liquidity_gross[41000] == 20 and 41000 not in state.liquidity_net
+
+def test_prefix_state_excludes_future_liquidity_and_invalid_widths():
+    tape = demo_tape()
+    events = list(tape.events[:5])
+    after_swap = LiquidityChange(
+        kind="mint", block=10001, log_index=2, owner="0x" + "12" * 20,
+        lower_tick=42000, upper_tick=45000, liquidity=5,
+    )
+    events.insert(4, after_swap)
+    sparse = Tape.model_validate({**tape.model_dump(exclude={"events"}), "events": events})
+    report, _ = replay_lp(sparse, until_swap=1, include_pool_state=True)
+    assert report["reconstructed_positions"] == 2
+    assert report["first_evaluated_block"] == report["end_block"]
+    with pytest.raises(ValueError, match="widths"):
+        holdout_width_study(sparse, ReplayConfig(), widths=[0])
