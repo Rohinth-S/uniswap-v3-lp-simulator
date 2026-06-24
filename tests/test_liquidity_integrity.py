@@ -41,3 +41,11 @@ def test_prefix_state_excludes_future_liquidity_and_invalid_widths():
     assert report["first_evaluated_block"] == report["end_block"]
     with pytest.raises(ValueError, match="widths"):
         holdout_width_study(sparse, ReplayConfig(), widths=[0])
+
+def test_rebalance_economics_and_peak_to_trough_drawdown():
+    report, ledger = replay_lp(demo_tape())
+    dynamic = report["strategies"]["rebalanced"]
+    assert dynamic["turnover_quote"] > 0 and dynamic["max_drawdown_quote"] > 0
+    assert dynamic["turnover_cost_quote"] == pytest.approx(dynamic["turnover_quote"] * 0.0015)
+    assert any(row["rebalance_reason"] == "range_shift" for row in ledger)
+    assert all(int(row["sqrt_price_x96_before"]) > 0 for row in ledger)
