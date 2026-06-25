@@ -49,3 +49,12 @@ def test_rebalance_economics_and_peak_to_trough_drawdown():
     assert dynamic["turnover_cost_quote"] == pytest.approx(dynamic["turnover_quote"] * 0.0015)
     assert any(row["rebalance_reason"] == "range_shift" for row in ledger)
     assert all(int(row["sqrt_price_x96_before"]) > 0 for row in ledger)
+
+def test_persisted_rpc_capture_validates_ordinals():
+    examples = Path(__file__).resolve().parents[1] / "examples"
+    meta = PoolMetadata.model_validate_json((examples / "arbitrum-pool.json").read_bytes())
+    logs = json.loads((examples / "arbitrum-opening-logs.json").read_bytes())
+    assert len(decode_logs(meta, logs).events) == 8
+    logs[0]["logIndex"] = "0x000"
+    with pytest.raises(ValueError, match="canonical uint64"):
+        decode_logs(meta, logs)
