@@ -75,3 +75,16 @@ use retrospectively assigned milestones from 2026-05-01 through 2026-06-30,
 the project period listed in the résumé. Each commit records its assigned date
 in the Project-Milestone trailer and its original committer timestamp in
 the Original-Commit-Date trailer. Use git log --format=fuller to inspect the dates.
+
+## Inspect a bounded replay
+
+Use `--from-swap` and `--until-swap` to run a half-open swap interval.
+Earlier pool events warm up state, while strategy positions open at the
+selected interval. The evaluation records both source log positions.
+
+Export exact terminal liquidity with `--pool-state-json reports/state.json`.
+Owner ranges and signed net and gross tick amounts are serialized as decimal
+strings. A tick can have gross liquidity with zero net change. Ledger rows
+include the prior tick and Q64.96 price, input notional, rebalance reason, and
+turnover. Strategy summaries measure peak-to-trough drawdown from initial
+capital.
