@@ -28,6 +28,7 @@ jobs:
           python -m pip install "${wheels[0]}[test]"
       - run: python -m pytest -q
       - run: uniswap_v3_lp_simulator --output reports/ci.json --ledger reports/ci-ledger.csv --width-candidates 400 600 900
+      - run: uniswap_v3_lp_simulator --raw-logs examples/arbitrum-opening-logs.json --metadata examples/arbitrum-pool.json --pool-state-json reports/arbitrum-state.json --output reports/arbitrum.json
       - uses: actions/upload-artifact@v4
         with:
           name: demo-${{ matrix.os }}-${{ matrix.python }}
