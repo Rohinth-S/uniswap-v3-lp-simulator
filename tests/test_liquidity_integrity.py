@@ -58,3 +58,17 @@ def test_persisted_rpc_capture_validates_ordinals():
     logs[0]["logIndex"] = "0x000"
     with pytest.raises(ValueError, match="canonical uint64"):
         decode_logs(meta, logs)
+
+def test_terminal_state_includes_trailing_mints_after_the_last_swap():
+    tape = demo_tape()
+    trailing = LiquidityChange(
+        kind="mint", block=10002, log_index=0, owner="0x" + "0a" * 20,
+        lower_tick=42000, upper_tick=44000, liquidity=10,
+    )
+    fixture = Tape.model_validate({
+        **tape.model_dump(exclude={"events"}), "events": [*tape.events[:4], trailing],
+    })
+    report, _ = replay_lp(fixture, include_pool_state=True)
+    assert report["end_block"] == 10001
+    assert report["pool_state"]["state_block"] == 10002
+    assert report["pool_state"]["state_log_index"] == 0

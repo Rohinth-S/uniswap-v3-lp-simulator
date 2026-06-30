@@ -102,6 +102,7 @@ def replay_lp(
     }
     if include_pool_state:
         report["pool_state"] = {
+            "state_block": market.last_applied[0], "state_log_index": market.last_applied[1],
             "active_liquidity_raw": str(market.active_at(market.tick)),
             "sqrt_price_x96": str(market.sqrt_price_x96),
             "positions": [

@@ -20,8 +20,10 @@ class PoolState:
         self.sqrt_price_x96: int | None = None
         self._ticks: list[int] = []
         self._prefix: list[int] = []
+        self.last_applied: tuple[int, int | None] | None = None
         self._dirty = False
         if pool.opening:
+            self.last_applied = (pool.opening.block, None)
             seen = set()
             for position in pool.opening.positions:
                 key = (position.owner, position.lower_tick, position.upper_tick)
@@ -105,3 +107,4 @@ class PoolState:
                 self._set_price(event.tick, event.sqrt_price_x96)
             except ValueError as exc:
                 raise ValueError(f"block {event.block}, log {event.log_index}: {exc}") from exc
+        self.last_applied = (event.block, event.log_index)
