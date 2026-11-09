@@ -27,9 +27,21 @@ The simulator keeps inventory and costs explicit instead of hiding them behind a
 ## Run
 ```bash
 pip install -e .
-python -m lp_simulator.cli
+python -m lp_simulator.cli --output reports/lp-summary.json
 pytest -q
 ```
+
+The CLI writes a JSON summary when `--output` is provided. The synthetic price path is a fixture; a production adapter should supply timestamped pool prices and decoded liquidity snapshots.
+
+## Live adapter boundary
+`lp_simulator.rpc.JsonRpcClient` supplies the same network boundary for pool-state adapters. The simulator remains independent of RPC transport so historical snapshots can be replayed offline.
+
+### Credential-dependent blockers
+Live pool replay requires RPC access plus Uniswap V3 ABI decoding for ticks, liquidity, and swaps. The current price-path model is an intentionally transparent approximation.
+
+## Environment
+
+Copy `.env.example` and set `RPC_URL` only when a reachable provider is available. The adapters do not embed credentials and never run implicitly during tests.
 
 ## Limitations
 The current engine uses a price-level approximation rather than full Uniswap tick liquidity and sqrt-price accounting. It is a research scaffold; validate against decoded pool state before using it for capital allocation.
