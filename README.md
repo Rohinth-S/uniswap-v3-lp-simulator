@@ -11,6 +11,9 @@ flowchart LR
   G --> O[Net PnL + IL report]
 ```
 
+## Structural overview
+`src/lp_simulator/sim.py` owns the replay and accounting model; `cli.py` is the thin experiment entry point; `tests/` locks down deterministic behavior.
+
 ## Workflow
 1. Replay a deterministic price path.
 2. Mark whether price is inside the LP range.
