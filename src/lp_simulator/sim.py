@@ -76,8 +76,8 @@ class Position:
 
 def rebalance_position(position: Position, current_price: float, width: float = 0.1) -> tuple[Position, TickRange]:
     """Create a tick-aligned range centred on ``current_price``."""
-    if current_price <= 0 or width <= 0:
-        raise ValueError("current_price and width must be positive")
+    if current_price <= 0 or not 0 < width < 1:
+        raise ValueError("current_price must be positive and width must be between 0 and 1")
     lower_tick = price_to_tick(current_price * (1 - width), rounding="floor")
     upper_tick = price_to_tick(current_price * (1 + width), rounding="ceil")
     ticks = TickRange(lower_tick, upper_tick, position.fee_rate)
