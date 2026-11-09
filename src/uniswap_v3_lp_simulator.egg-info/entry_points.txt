@@ -1,2 +1,0 @@
-[console_scripts]
-uniswap_v3_lp_simulator = lp_simulator.cli:main
