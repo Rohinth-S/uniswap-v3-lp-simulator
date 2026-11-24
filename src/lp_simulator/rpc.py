@@ -41,7 +41,10 @@ class JsonRpcClient:
     def block_number(self) -> int:
         return int(self.call("eth_blockNumber", []), 16)
 
-    def get_logs(self, *, from_block: int, to_block: int, address: str | None = None, topics: list[str] | None = None) -> list[dict]:
+    def get_logs(
+        self, *, from_block: int, to_block: int, address: str | None = None,
+        topics: list[str | list[str] | None] | None = None,
+    ) -> list[dict]:
         if from_block < 0 or to_block < from_block:
             raise ValueError("invalid block range")
         log_filter = {"fromBlock": hex(from_block), "toBlock": hex(to_block)}
