@@ -49,9 +49,11 @@ uniswap_v3_lp_simulator --raw-logs data/pool-logs.json \
   --metadata data/pool-metadata.json --output reports/historical.json
 uniswap_v3_lp_simulator --network ethereum --rpc-range 26486690 26486702 \
   --metadata examples/ethereum-pool.json --output reports/ethereum-smoke.json
+uniswap_v3_lp_simulator --raw-logs examples/arbitrum-opening-logs.json \
+  --metadata examples/arbitrum-pool.json --output reports/arbitrum-smoke.json
 ```
 
-For the RPC command, set `RPC_URL` to an endpoint that serves the requested range and supports the `finalized` block tag. The Ethereum example replayed one observed swap from recorded initialization onward. The reader also accepts chain ID 42161 for Arbitrum pool metadata and validates the provider's reported chain.
+For the RPC command, set `RPC_URL` to an endpoint that serves the requested range and supports the `finalized` block tag. The Ethereum example replayed one observed swap from recorded initialization onward. The Arbitrum example includes eight raw pool events from finalized blocks 100,909 to 228,740, captured from the public Arbitrum One RPC. Those logs reconstruct the opening pool positions and reconcile four observed swaps offline.
 
 - Strategy ranges use the pool's tick spacing and Q64.96 spot prices with decimals normalization. The ledger reports token1 units and carries both token balances and the equivalent spot valuation.
 - Fees are an estimate based on historical input flows, segment liquidity and LP share. The historical pool price path is held fixed for both counterfactual strategies.

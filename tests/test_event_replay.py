@@ -1,3 +1,6 @@
+import json
+from pathlib import Path
+
 import pytest
 
 from lp_simulator.events import CODEC, TOPICS, decode_logs, fetch_logs
@@ -90,3 +93,15 @@ def test_rpc_rejects_unfinalized_range_and_chunks_requests():
     assert provider.captured == [(14, 16), (17, 19), (20, 21)]
     with pytest.raises(ValueError, match="finalized"):
         fetch_logs(provider, meta, from_block=14, to_block=22)
+
+
+def test_archived_arbitrum_pool_reconciles_emitted_liquidity():
+    examples = Path(__file__).resolve().parents[1] / "examples"
+    metadata = PoolMetadata.model_validate_json((examples / "arbitrum-pool.json").read_bytes())
+    raw_logs = json.loads((examples / "arbitrum-opening-logs.json").read_bytes())
+    tape = decode_logs(metadata, raw_logs)
+    report, ledger = replay_lp(tape)
+    assert report["chain_id"] == 42161
+    assert tape.events[0].block == 100_909
+    assert report["end_block"] == 228_740 and report["swaps"] == 4
+    assert len(ledger) == 8

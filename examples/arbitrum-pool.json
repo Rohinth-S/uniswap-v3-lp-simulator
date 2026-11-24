@@ -1,0 +1,9 @@
+{
+  "chain_id": 42161,
+  "pool": "0xc31e54c7a869b9fcbecc14363cf510d1c41fa443",
+  "token0_decimals": 18,
+  "token1_decimals": 6,
+  "fee_pips": 500,
+  "tick_spacing": 10,
+  "opening": null
+}
