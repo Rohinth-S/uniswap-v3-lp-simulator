@@ -1,0 +1,8 @@
+{
+  "chain_id": 1,
+  "pool": "0x767eb2c7e037a150d99008c3778ad2b5da1d9799",
+  "token0_decimals": 18,
+  "token1_decimals": 18,
+  "fee_pips": 10000,
+  "tick_spacing": 200
+}
