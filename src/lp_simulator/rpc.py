@@ -31,7 +31,14 @@ class JsonRpcClient:
         return json.dumps({"jsonrpc": "2.0", "id": 1, "method": method, "params": params}).encode()
 
     def call(self, method: str, params: list) -> object:
-        req = Request(self.url, data=self.request_payload(method, params), headers={"Content-Type": "application/json"})
+        req = Request(
+            self.url, data=self.request_payload(method, params),
+            headers={
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "User-Agent": "uniswap-v3-lp-simulator/0.2",
+            },
+        )
         with urlopen(req, timeout=self.timeout) as response:
             payload = json.loads(response.read())
         if "error" in payload:
